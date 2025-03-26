@@ -2,13 +2,15 @@ import { VStack, Button, Input, FormControl, FormLabel, Text } from "@chakra-ui/
 
 import { useState } from "react";
 
+import { login } from "../endpoints/api";
+
 const Login = () => {
 
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
 
     const handleLogin = () =>{
-        
+        login(username, password)
     }
 
 
@@ -23,7 +25,7 @@ const Login = () => {
                 <FormLabel>Password</FormLabel>
                 <Input onChange={(e) => setPassword(e.target.value)} value={password}  bg='white' type='password' placeholder='Your password here' />
             </FormControl>
-            <Button mb='10px' colorScheme='red' mt='20px' w='100%'>Login</Button>
+            <Button onClick={handleLogin} mb='10px' colorScheme='red' mt='20px' w='100%'>Login</Button>
         </VStack>
     )
 }
