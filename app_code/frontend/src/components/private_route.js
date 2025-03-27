@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 const PrivateRoute = ({children}) => {
     const{ isAuthenticated, loading } = useAuth();
+    const nav = useNavigate();
 
     if (loading){
         return <Heading>Veuillez patienter...</Heading>
@@ -14,7 +15,7 @@ const PrivateRoute = ({children}) => {
     if (isAuthenticated) {
         return children
     } else {
-        navigator('/login')
+        nav('/login')
     }
 }
 

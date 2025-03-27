@@ -2,15 +2,24 @@ import { VStack, Button, Input, FormControl, FormLabel, Text } from "@chakra-ui/
 
 import { useState } from "react";
 
-import { login } from "../endpoints/api";
+import { useAuth } from "../contexts/useAuth";
+
+import { useNavigate } from "react-router-dom";
+
 
 const Login = () => {
 
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    const {login_user} = useAuth();
+    const nav = useNavigate();
 
     const handleLogin = () =>{
-        login(username, password)
+        login_user(username, password)
+    }
+
+    const handleNavigate = () =>{
+        nav('/register')
     }
 
 
@@ -26,6 +35,7 @@ const Login = () => {
                 <Input onChange={(e) => setPassword(e.target.value)} value={password}  bg='white' type='password' placeholder='Your password here' />
             </FormControl>
             <Button onClick={handleLogin} mb='10px' colorScheme='red' mt='20px' w='100%'>Login</Button>
+            <Text onClick={handleNavigate}>Vous n'avez pas de compte? Créez-en un.</Text>
         </VStack>
     )
 }

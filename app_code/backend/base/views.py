@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Note
-from .serializer import NoteSerializer
+from .serializer import NoteSerializer, UserRegisterSerializer , UserSerializer
 # Create your views here.
 
 from rest_framework_simplejwt.views import(
@@ -96,6 +96,15 @@ def logout(request):
         print(e)
         return Response({'success':False})
  
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register(request):
+    serializer = UserRegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.error)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def is_authenticated(request):
