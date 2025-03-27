@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Note
+from .models import Note, Offer
 from django.contrib.auth.models import User
 
 
@@ -30,3 +30,8 @@ class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model=Note
         fields=['id','description']
+
+class OfferSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Offer
+        fields = ['id', 'title', 'description', 'capacity', 'price']

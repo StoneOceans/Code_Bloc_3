@@ -12,6 +12,7 @@ from rest_framework_simplejwt.views import(
     TokenRefreshView,
 )
 
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         try:
@@ -20,6 +21,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
             access_token = tokens['access']
             refresh_token = tokens['refresh']
+
+            seriliazer = UserSerializer(request.user, many=False)
 
             res = Response()
 
@@ -42,13 +45,13 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 samesite='None',
                 path='/'
             )
-            
+            res.data.update(tokens)
             return res
         
         except Exception as e:
             print(e)
             return Response({'success':False})
-
+        
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         try:
@@ -118,4 +121,9 @@ def get_notes(request):
     serializer = NoteSerializer(notes,many=True)
     return Response(serializer.data)
 
-
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_offers(request):
+    offers = Offer.objects.all()
+    serializer = OfferSerializer(offers, many=True)
+    return Response(serializer.data)

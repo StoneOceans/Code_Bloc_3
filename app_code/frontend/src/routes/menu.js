@@ -1,43 +1,38 @@
-import { VStack, Heading, Text, Button } from "@chakra-ui/react";
-
+import { VStack, Heading, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-
-
-import { get_notes, logout} from "../endpoints/api";
-import { useNavigate } from "react-router-dom";
-
+import { get_notes } from "../endpoints/api";
+import Navbar from "../components/navbar";
 
 const Menu = () => {
   const [notes, setNotes] = useState([]);
-  const nav = useNavigate();
 
   useEffect(() => {
     const fetchNotes = async () => {
-      const notes = await get_notes();
-      setNotes(notes);
+      const notesData = await get_notes();
+      setNotes(notesData);
     };
     fetchNotes();
   }, []);
-
-
-  const handleLogout = async () =>{
-    const success = await logout();
-        if (success) {
-            nav('/login')
-        }
-  }
-
+  
 
   return (
-    <VStack>
-      <Heading>Welcome back User!</Heading>
-      <VStack>
-        {notes.map((note) => (
+    <>
+      {/* Our new red-themed navbar */}
+      <Navbar />
+
+      {/* Main content below the navbar */}
+      <VStack spacing={8} p={8}>
+        <Heading>Bienvenue sur Jeux Olympiques France</Heading>
+        <Text>
+          Découvrez nos offres exclusives pour vivre l'expérience olympique.
+        </Text>
+
+        {/* Example of rendering notes if needed */}
+        {notes && notes.map((note) => (
           <Text key={note.id}>{note.description}</Text>
         ))}
       </VStack>
-      <Button onClick={handleLogout} colorScheme="red">Logout</Button>
-    </VStack>
+    </>
   );
 };
 
