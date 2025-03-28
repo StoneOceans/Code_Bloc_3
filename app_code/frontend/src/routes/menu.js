@@ -24,7 +24,7 @@ const Menu = () => {
       <VStack spacing={8} p={8}>
         <Heading>Bienvenue sur Jeux Olympiques France</Heading>
         <Text>
-          Découvrez nos offres exclusives pour vivre l'expérience olympique.
+          Découvrez ici ! Nos offres exclusives pour vivre l'expérience olympique.
         </Text>
 
         {/* Example of rendering notes if needed */}
