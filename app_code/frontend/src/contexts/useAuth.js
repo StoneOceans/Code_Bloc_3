@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { is_authenticated, register } from "../endpoints/api";
 
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@chakra-ui/react";
 
 import { login } from "../endpoints/api";
 
@@ -12,6 +13,7 @@ export const AuthProvider = ({ children }) => {
   
   const [loading, setLoading] = useState(true);
   const nav = useNavigate();
+  const toast = useToast(); 
 
   const get_authenticated = async () => {
     try {
@@ -41,26 +43,36 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register_user = async (username, email, password, Cpassword) => {
-    if (password !== Cpassword) {
-      alert("Le mot de passe ne correspond pas");
-      return;
-    }
     try {
       const response = await register(username, email, password);
       console.log("Register response:", response);
       if (response && response.success === true) {
-        alert("Succès de la création de compte");
+        toast({
+          title: "Compte créé",
+          description: "Vous êtes maintenant inscrit.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
         setIsAuthenticated(true);
         nav("/");
+        return { success: true };
       } else {
-        alert("Erreur lors de la création du compte");
+        return { 
+          success: false,
+          error: response?.error || "Erreur lors de la création du compte",
+          errors: response?.errors || {}
+        };
       }
     } catch (error) {
       console.error("Erreur d'inscription:", error);
-      alert("Erreur lors de la création du compte");
+      return { 
+        success: false,
+        error: "Une erreur est survenue",
+        errors: {}
+      };
     }
   };
-
   useEffect(() => {
     get_authenticated();
   }, [window.location.pathname]);

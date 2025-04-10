@@ -1,7 +1,8 @@
-import { Flex, Heading, HStack, Button } from "@chakra-ui/react";
+import { Flex, Heading, HStack, Button, Icon, Link } from "@chakra-ui/react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/useAuth";
 import { logout } from "../endpoints/api";
+import { GiMedal } from "react-icons/gi";
 
 const Navbar = () => {
   const { isAuthenticated } = useAuth();
@@ -17,56 +18,60 @@ const Navbar = () => {
   return (
     <Flex
       as="nav"
-      bg="red.600"
+      bgGradient="linear(to-r, red.400, red.500, red.600)"
       color="white"
       align="center"
       justify="space-between"
       px={8}
       py={4}
+      boxShadow="md"
+      position="sticky"
+      top="0"
+      zIndex="1000"
     >
-      <Heading size="md">Jeux Olympiques FR</Heading>
-
+      <Link as={RouterLink} to="/" _hover={{ textDecoration: "none" }}>
+        <HStack>
+          <Icon as={GiMedal} w={8} h={8} />
+          <Heading size="md" fontWeight="bold">
+            Jeux Olympiques FR
+          </Heading>
+        </HStack>
+      </Link>
       <HStack spacing={6}>
         <Button
           as={RouterLink}
           to="/offers"
-          variant="solid"
-          bg="white"
-          color="red.600"
-          _hover={{ bg: "gray.200" }}
+          variant="ghost"
+          color="white"
+          _hover={{ bg: "whiteAlpha.300", color: "blackAlpha.700" }}
         >
           Offres
         </Button>
-
         <Button
           as={RouterLink}
           to="/cart"
-          variant="solid"
-          bg="white"
-          color="red.600"
-          _hover={{ bg: "gray.200" }}
+          variant="ghost"
+          color="white"
+          _hover={{ bg: "whiteAlpha.300", color: "blackAlpha.700" }}
         >
           Panier
         </Button>
-
         {isAuthenticated ? (
           <Button
-            variant="solid"
-            bg="white"
-            color="red.600"
-            _hover={{ bg: "gray.200" }}
+            variant="ghost"
+            color="white"
+            _hover={{ bg: "whiteAlpha.300", color: "blackAlpha.700" }}
             onClick={handleLogout}
           >
-            Logout
+            Se deconneter
           </Button>
         ) : (
           <Button
             as={RouterLink}
             to="/login"
-            variant="solid"
-            bg="white"
-            color="red.600"
-            _hover={{ bg: "gray.200" }}
+            variant="ghost"
+            color="white"
+            _hover={{ bg: "whiteAlpha.300", color: "blackAlpha.700" }}
           >
             Se Connecter
           </Button>
