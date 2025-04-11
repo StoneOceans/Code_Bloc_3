@@ -188,9 +188,7 @@ def logout(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def is_authenticated(request):
-    return Response({
-        'authenticated': request.user.is_authenticated
-    })
+    return Response({'authenticated': request.user.is_authenticated})
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

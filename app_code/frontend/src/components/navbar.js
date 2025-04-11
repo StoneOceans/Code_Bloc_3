@@ -1,7 +1,9 @@
-import { Flex, Heading, HStack, Button, Icon, Link } from "@chakra-ui/react";
+import { Flex, Heading, HStack, Button, Icon, Link, Box } from "@chakra-ui/react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+
 import { useAuth } from "../contexts/useAuth";
 import { logout } from "../endpoints/api";
+
 import { GiMedal } from "react-icons/gi";
 
 const Navbar = () => {
@@ -37,7 +39,17 @@ const Navbar = () => {
           </Heading>
         </HStack>
       </Link>
+      
       <HStack spacing={6}>
+        <Button
+          as={RouterLink}
+          to="/"
+          variant="ghost"
+          color="white"
+          _hover={{ bg: "whiteAlpha.300", color: "blackAlpha.700" }}
+        >
+          Menu
+        </Button>
         <Button
           as={RouterLink}
           to="/offers"
@@ -56,16 +68,10 @@ const Navbar = () => {
         >
           Panier
         </Button>
-        {isAuthenticated ? (
-          <Button
-            variant="ghost"
-            color="white"
-            _hover={{ bg: "whiteAlpha.300", color: "blackAlpha.700" }}
-            onClick={handleLogout}
-          >
-            Se deconneter
-          </Button>
-        ) : (
+      </HStack>
+
+      <HStack spacing={4}>
+        {!isAuthenticated && (
           <Button
             as={RouterLink}
             to="/login"
@@ -74,6 +80,16 @@ const Navbar = () => {
             _hover={{ bg: "whiteAlpha.300", color: "blackAlpha.700" }}
           >
             Se Connecter
+          </Button>
+        )}
+        {isAuthenticated && (
+          <Button
+            variant="ghost"
+            color="white"
+            _hover={{ bg: "whiteAlpha.300", color: "blackAlpha.700" }}
+            onClick={handleLogout}
+          >
+            Se Déconnecter
           </Button>
         )}
       </HStack>

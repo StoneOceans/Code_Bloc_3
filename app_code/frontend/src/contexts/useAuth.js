@@ -17,14 +17,16 @@ export const AuthProvider = ({ children }) => {
 
   const get_authenticated = async () => {
     try {
-      const success = await is_authenticated();
-      setIsAuthenticated(success);
+      const authenticated = await is_authenticated(); 
+      setIsAuthenticated(authenticated); 
     } catch {
       setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
   };
+  
+  
 
   const login_user = async (username, password) => {
     try {

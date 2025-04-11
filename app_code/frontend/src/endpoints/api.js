@@ -44,31 +44,17 @@ export const refresh_token = async () => {
 
 export const get_notes = async () => {
   try {
-    const response = await axios.get(NOTES_URL, { 
-      withCredentials: true 
-    });
+    const response = await axios.get(NOTES_URL, { withCredentials: true });
     return response.data;
   } catch (error) {
     if (error.response?.status === 401) {
-      try {
-        const refreshed = await refresh_token();
-        if (refreshed) {
-          const retryResponse = await axios.get(NOTES_URL, { 
-            withCredentials: true 
-          });
-          return retryResponse.data;
-        }
-      } catch (refreshError) {
-        console.error("Refresh failed:", refreshError);
-        // Redirect to login if refresh fails
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
-      }
+      console.error("Non authentifié, retour notes vide");
+      return []; 
     }
-    throw error; // Re-throw if not a 401 or other handling needed
+    throw error; 
   }
 };
+
 
 const call_refresh = async (error, func) => {
   if (error.response && error.response.status === 401) {
@@ -100,11 +86,11 @@ export const logout = async () => {
 };
 
 export const is_authenticated = async () => {
-  const response = await axios.get(AUTH_URL, { 
-    withCredentials: true 
-  });
-  return response.data;
+  const response = await axios.get(AUTH_URL, { withCredentials: true });
+  return response.data.authenticated; 
 };
+
+
 
 export const register = async (username, email, password) => {
   try {

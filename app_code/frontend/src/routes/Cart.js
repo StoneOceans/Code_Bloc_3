@@ -1,22 +1,62 @@
-import { Box, Button, Heading, Text, VStack, HStack, Icon,  Spinner, Divider, Stack, Flex,Modal,ModalOverlay,ModalContent,ModalHeader,ModalCloseButton,ModalBody, ModalFooter,FormControl,FormLabel,Input,useDisclosure
+import React, { useEffect, useState, useMemo } from "react";
+import {
+  Box,
+  Button,
+  Heading,
+  Text,
+  VStack,
+  HStack,
+  Icon,
+  Spinner,
+  Divider,
+  Stack,
+  Flex,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  FormControl,
+  FormLabel,
+  Input,
+  useDisclosure,
+  useToast
 } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { FaMoneyCheckAlt, FaTrash } from "react-icons/fa";
-import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import { useCart } from "../components/CartContext";
 import Navbar from "../components/navbar";
-import { motion } from "framer-motion";
+import { useAuth } from "../contexts/useAuth";
 
 const MotionBox = motion(Box);
 
 const Cart = () => {
   const { cart, removeFromCart, clearCart } = useCart();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const { isAuthenticated } = useAuth();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const toast = useToast();
 
   const totalPrice = useMemo(() => {
     return cart.reduce((total, item) => total + parseFloat(item.price || 0), 0);
   }, [cart]);
+
+  const handlePaymentClick = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentification requise",
+        description: "Veuillez vous connecter d'abord pour procéder au paiement.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+    } else {
+      onOpen();
+    }
+  };
 
   const handlePayment = () => {
     setIsProcessing(true);
@@ -110,7 +150,7 @@ const Cart = () => {
                   colorScheme="red"
                   variant="solid"
                   leftIcon={<FaMoneyCheckAlt />}
-                  onClick={onOpen}
+                  onClick={handlePaymentClick}
                 >
                   Procéder au paiement
                 </Button>
@@ -125,7 +165,6 @@ const Cart = () => {
           </VStack>
         )}
       </Flex>
-
 
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
