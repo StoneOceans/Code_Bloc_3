@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const BASE_URL = 'http://127.0.0.1:8000/api/';
+const BASE_URL = 'http://127.0.0.1:8001/api/';
 const LOGIN_URL = `${BASE_URL}tokens/`;
 const REFRESH_URL = `${BASE_URL}token/refresh/`;
 const NOTES_URL = `${BASE_URL}notes/`;

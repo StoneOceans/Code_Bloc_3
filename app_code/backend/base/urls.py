@@ -1,4 +1,6 @@
 from django.urls import path
+from django.views.generic import TemplateView
+from django.urls import re_path
 from .views import get_notes, CustomTokenObtainPairView,CustomTokenRefreshView, logout, is_authenticated, register, get_offers
 
 urlpatterns = [
