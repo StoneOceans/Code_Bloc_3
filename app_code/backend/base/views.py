@@ -110,8 +110,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 key='access_token',
                 value=str(access_token),
                 httponly=True,
-                secure=True,
-                samesite='None',
+                secure=False,
+                samesite='Lax',
                 path='/'
             )
 
@@ -119,8 +119,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 key='refresh_token',
                 value=str(refresh_token),
                 httponly=True,
-                secure=True,
-                samesite='None',
+                secure=False,
+                samesite='Lax',
                 path='/'
             )
             res.data.update(tokens)
@@ -151,7 +151,7 @@ class CustomTokenRefreshView(TokenRefreshView):
                 value=access_token,
                 httponly=True,
                 secure=False,
-                samesite='None',
+                samesite='Lax',
                 path='/'
             )
             return res
