@@ -21,7 +21,7 @@ function Footer() {
           align="start"
         >
           <Image
-            src="/images/rings.png"
+            src="/static/images/rings.png"
             alt="Olympic Rings"
             w="64px"
             mb={{ base: 4, md: 0 }}
