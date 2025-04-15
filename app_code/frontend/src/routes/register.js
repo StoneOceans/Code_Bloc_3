@@ -35,7 +35,6 @@ const Register = () => {
       [name]: value
     }));
     
-    // Effacer l'erreur quand l'utilisateur tape
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -43,7 +42,6 @@ const Register = () => {
       }));
     }
     
-    // Effacer l'erreur de confirmation quand on modifie un des mots de passe
     if ((name === 'password' || name === 'confirmPassword') && errors.confirmPassword) {
       setErrors(prev => ({
         ...prev,
@@ -81,11 +79,8 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Clear previous errors
     setErrors({});
-  
-    // Client-side validation
+
     if (formData.password !== formData.confirmPassword) {
       setErrors({ confirmPassword: 'Les mots de passe ne correspondent pas' });
       return;
@@ -109,9 +104,8 @@ const Register = () => {
           duration: 5000,
           isClosable: true,
         });
-        navigate('/');
+        navigate('/login');
       } else {
-        // Transform Django error format to match form field names
         const formattedErrors = {};
         if (result.errors) {
           Object.keys(result.errors).forEach(key => {
@@ -121,18 +115,6 @@ const Register = () => {
           });
         }
         setErrors(formattedErrors);
-        
-        // Check if error is not username taken or password mismatch
-        const shouldRedirect = !(
-          formattedErrors.username?.includes('already taken') || 
-          formattedErrors.confirmPassword ||
-          result.error?.includes('password') ||
-          result.error?.includes('username')
-        );
-  
-        if (shouldRedirect) {
-          navigate('/');
-        }
   
         toast({
           title: "Erreur d'inscription",
@@ -143,7 +125,7 @@ const Register = () => {
         });
       }
     } catch (error) {
-      navigate('/');
+      navigate('/login');
       toast({
         title: "Erreur",
         description: "Une erreur inattendue est survenue",

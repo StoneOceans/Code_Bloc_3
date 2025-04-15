@@ -23,7 +23,6 @@ def register(request):
         data = request.data
         required_fields = ['username', 'email', 'password']
         
-        # Check for missing fields
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             return Response({
@@ -32,7 +31,6 @@ def register(request):
                 "missing_fields": missing_fields
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check for empty values
         empty_fields = [field for field in required_fields if not data.get(field)]
         if empty_fields:
             return Response({
@@ -50,12 +48,8 @@ def register(request):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         user = serializer.save()
-        
-        # Create UserProfile
-        secret_key = secrets.token_hex(16)
-        UserProfile.objects.create(user=user, secret_key=secret_key)
 
-        # Generate tokens
+
         refresh = RefreshToken.for_user(user)
         
         response_data = {
@@ -70,13 +64,12 @@ def register(request):
         }
 
         response = Response(response_data, status=status.HTTP_201_CREATED)
-        
-        # Set cookies
+
         response.set_cookie(
             key='access_token',
             value=str(refresh.access_token),
             httponly=True,
-            secure=False,
+            secure=False,  
             samesite='Lax',
             path='/'
         )
@@ -88,7 +81,7 @@ def register(request):
             samesite='Lax',
             path='/'
         )
-        
+
         return response
 
     except Exception as e:
@@ -96,6 +89,7 @@ def register(request):
             "success": False,
             "error": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
