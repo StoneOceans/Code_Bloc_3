@@ -22,7 +22,8 @@ import {
   FormLabel,
   Input,
   useDisclosure,
-  useToast
+  useToast,
+  Image
 } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { FaMoneyCheckAlt, FaTrash } from "react-icons/fa";
@@ -30,6 +31,7 @@ import { motion } from "framer-motion";
 import { useCart } from "../components/CartContext";
 import Navbar from "../components/navbar";
 import { useAuth } from "../contexts/useAuth";
+import axios from "axios";
 
 const MotionBox = motion(Box);
 
@@ -38,11 +40,13 @@ const Cart = () => {
   const { isAuthenticated } = useAuth();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [ticket, setTicket] = useState(null);
   const toast = useToast();
 
-  const totalPrice = useMemo(() => {
-    return cart.reduce((total, item) => total + parseFloat(item.price || 0), 0);
-  }, [cart]);
+  const totalPrice = useMemo(
+    () => cart.reduce((total, item) => total + parseFloat(item.price || 0), 0),
+    [cart]
+  );
 
   const handlePaymentClick = () => {
     if (!isAuthenticated) {
@@ -58,14 +62,46 @@ const Cart = () => {
     }
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
+    try {
+      const response = await axios.post(
+        "http://sitedesjo.college-hanned.net/api/purchase/",
+        { cart },
+        { withCredentials: true }
+      );
+      if (response.data && response.data.ticket) {
+        setTicket(response.data.ticket);
+        clearCart();
+        toast({
+          title: "Paiement réussi",
+          description: "Votre ticket QR a été généré avec succès.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Paiement réussi",
+          description: "Aucun ticket QR n'a été reçu.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur de paiement",
+        description: "Une erreur s'est produite lors du paiement.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      console.error("Payment error:", error);
+    } finally {
       setIsProcessing(false);
-      alert("Paiement réussi !");
-      clearCart();
       onClose();
-    }, 3000);
+    }
   };
 
   return (
@@ -83,16 +119,15 @@ const Cart = () => {
         <Heading mb={6} color="red.500" textAlign="center">
           <Icon as={FaMoneyCheckAlt} mr={2} /> Votre Panier
         </Heading>
-
         {cart.length === 0 ? (
           <Text fontSize="xl" color="gray.600">
             Votre panier est vide.
           </Text>
         ) : (
           <VStack spacing={4} w="full" maxW="600px">
-            {cart.map((item) => (
+            {cart.map((item, index) => (
               <MotionBox
-                key={item.id}
+                key={`${item.id}-${index}`}
                 p={4}
                 w="full"
                 bg="white"
@@ -125,9 +160,7 @@ const Cart = () => {
                 </HStack>
               </MotionBox>
             ))}
-
             <Divider />
-
             <Stack spacing={4} w="full">
               <HStack justifyContent="space-between">
                 <Text fontSize="xl" fontWeight="semibold">
@@ -138,12 +171,7 @@ const Cart = () => {
                 </Text>
               </HStack>
               <HStack spacing={4} justifyContent="center">
-                <Button
-                  colorScheme="red"
-                  variant="solid"
-                  leftIcon={<FaTrash />}
-                  onClick={clearCart}
-                >
+                <Button colorScheme="red" variant="solid" leftIcon={<FaTrash />} onClick={clearCart}>
                   Vider le panier
                 </Button>
                 <Button
@@ -164,8 +192,25 @@ const Cart = () => {
             </Stack>
           </VStack>
         )}
+        {ticket && (
+          <Box mt={8} p={4} borderWidth="1px" borderRadius="lg" shadow="md" bg="white" maxW="400px">
+            <Heading as="h2" size="md" color="green.600" textAlign="center">
+              Votre ticket (QR Code)
+            </Heading>
+            <Image
+              src={`data:image/png;base64,${ticket}`}
+              alt="Ticket QR Code"
+              boxSize="250px"
+              objectFit="contain"
+              mx="auto"
+              mt={4}
+            />
+            <Text mt={4} textAlign="center" fontSize="lg">
+              Scannez ce QR code avec votre application pour accéder à l'événement.
+            </Text>
+          </Box>
+        )}
       </Flex>
-
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>
@@ -189,12 +234,7 @@ const Cart = () => {
             <Button variant="ghost" mr={3} onClick={onClose}>
               Annuler
             </Button>
-            <Button 
-              colorScheme="red" 
-              onClick={handlePayment}
-              isLoading={isProcessing}
-              loadingText="Traitement..."
-            >
+            <Button colorScheme="red" onClick={handlePayment} isLoading={isProcessing} loadingText="Traitement...">
               Confirmer Paiement
             </Button>
           </ModalFooter>

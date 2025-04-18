@@ -9,7 +9,7 @@ const AdminOffers = () => {
 
   const fetchOffers = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/offers/', { withCredentials: true });
+      const response = await axios.get('http://sitedesjo.college-hanned/api/offers/', { withCredentials: true });
       setOffers(response.data);
     } catch (error) {
       console.error("Erreur lors de la récupération des offres :", error);
@@ -28,7 +28,7 @@ const AdminOffers = () => {
         price: Number(newOffer.price),
       };
       await axios.post(
-        'http://127.0.0.1:8000/api/offers/',
+        'http://sitedesjo.college-hanned/api/offers/',
         offerData,
         { withCredentials: true }
       );

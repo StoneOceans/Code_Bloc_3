@@ -7,9 +7,8 @@ class UserProfile(models.Model):
     secret_key = models.CharField(max_length=64, blank=True, unique=True)
 
     def save(self, *args, **kwargs):
-        # Generate a random hex key if none exists
         if not self.secret_key:
-            self.secret_key = secrets.token_hex(16)  # 32-hex chars
+            self.secret_key = secrets.token_hex(16)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -23,7 +22,7 @@ class Note(models.Model):
 class Offer(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
-    capacity = models.IntegerField()  # 1 pour solo, 2 pour duo, 4 pour familiale
+    capacity = models.IntegerField() 
     price = models.DecimalField(max_digits=6, decimal_places=2)
 
     def __str__(self):
@@ -31,7 +30,7 @@ class Offer(models.Model):
 
 class Purchase(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    items = models.TextField()  # or JSONField if you prefer, storing cart items
+    items = models.TextField() 
     final_key = models.CharField(max_length=128, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

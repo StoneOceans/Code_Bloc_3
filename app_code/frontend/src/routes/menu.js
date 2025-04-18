@@ -24,7 +24,7 @@ const Menu = () => {
 
       <Box position="relative" overflow="hidden">
         <MotionImage
-          src="/static/images/PARIS.png"
+          src="/static/static/static/static/images/PARIS.png"
           alt="Paris"
           w="100vw"
           h="80vh"
@@ -88,7 +88,7 @@ const Menu = () => {
             gap={8}
           >
             <Image 
-              src="/static/images/natation.jpg" 
+              src="/static/static/static/static/images/natation.jpg" 
               alt="Natation" 
               maxW={{ base: "100%", md: "500px" }}
               borderRadius="md"
@@ -111,7 +111,7 @@ const Menu = () => {
             gap={8}
           >
             <Image 
-              src="/static/images/athletisme.jpg" 
+              src="/static/static/static/static/images/athletisme.jpg" 
               alt="Athlétisme" 
               maxW={{ base: "100%", md: "500px" }}
               borderRadius="md"

@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import UserProfile, Offer, Note
+from .models import UserProfile, Offer, Note, Purchase
+import qrcode
+import base64
+from io import BytesIO
 import secrets
 
 
@@ -32,7 +35,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             password=validated_data['password']
         )
-        # Create UserProfile
         secret_key = secrets.token_hex(16)
         UserProfile.objects.create(user=user, secret_key=secret_key)
         return user
@@ -54,3 +56,36 @@ class OfferSerializer(serializers.ModelSerializer):
         model = Offer
         fields = ['id', 'title', 'description', 'capacity', 'price']
 
+class PurchaseSerializer(serializers.ModelSerializer):
+    ticket = serializers.SerializerMethodField()
+    type_ticket = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Purchase
+        fields = ['id', 'items', 'final_key', 'created_at', 'ticket', 'type_ticket']
+
+    def get_ticket(self, obj):
+        buffer = BytesIO()
+        img = qrcode.make(obj.final_key)
+        img.save(buffer, format="PNG")
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+    def get_type_ticket(self, obj):
+        try:
+            items = obj.items  
+            if isinstance(items, str):
+                items = json.loads(items)
+            if isinstance(items, list) and len(items) > 0:
+                const = items[0].get("capacity")
+                if const == 1:
+                    return "Ticket Solo"
+                elif const == 2:
+                    return "Ticket Duo"
+                elif const == 4:
+                    return "Ticket Familial"
+                else:
+                    return "Ticket personnalisé"
+            else:
+                return "Ticket personallisé"
+        except Exception as e:
+            return "Ticket personallisé"

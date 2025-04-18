@@ -1,9 +1,7 @@
-import { Flex, Heading, HStack, Button, Icon, Link, Box } from "@chakra-ui/react";
+import { Flex, Heading, HStack, Button, Icon, Link } from "@chakra-ui/react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-
 import { useAuth } from "../contexts/useAuth";
 import { logout } from "../endpoints/api";
-
 import { GiMedal } from "react-icons/gi";
 
 const Navbar = () => {
@@ -68,6 +66,17 @@ const Navbar = () => {
         >
           Panier
         </Button>
+        {isAuthenticated && (
+          <Button
+            as={RouterLink}
+            to="/orders"
+            variant="ghost"
+            color="white"
+            _hover={{ bg: "whiteAlpha.300", color: "blackAlpha.700" }}
+          >
+            Commandes
+          </Button>
+        )}
       </HStack>
 
       <HStack spacing={4}>

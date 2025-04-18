@@ -12,7 +12,7 @@ const Offers = () => {
     const fetchOffers = async () => {
       try {
         const response = await axios.get(
-          "http://127.0.0.1:8000/api/offers/",
+          "http://sitedesjo.college-hanned/api/offers/",
           { withCredentials: true }
         );
         setOffers(response.data);

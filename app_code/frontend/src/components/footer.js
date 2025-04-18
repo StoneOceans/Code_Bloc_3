@@ -21,7 +21,7 @@ function Footer() {
           align="start"
         >
           <Image
-            src="/static/images/rings.png"
+            src="/static/static/static/static/images/rings.png"
             alt="Olympic Rings"
             w="64px"
             mb={{ base: 4, md: 0 }}
@@ -93,7 +93,7 @@ function Footer() {
             <Text fontSize="sm">Carrières</Text>
           </HStack>
 
-          <Text fontSize="sm">© 2025. All rights reserved</Text>
+          <Text fontSize="sm">© 2024. All rights reserved</Text>
         </Flex>
       </Container>
     </Box>

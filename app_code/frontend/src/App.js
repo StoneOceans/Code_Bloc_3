@@ -8,6 +8,7 @@ import Register from './routes/register';
 import Offers from './routes/Offers';
 import AdminOffers from './routes/AdminOffers';
 import Cart from './routes/Cart';
+import Orders from './routes/Orders';
 import PrivateRoute from './components/private_route';
 
 import { AuthProvider } from './contexts/useAuth';
@@ -25,7 +26,8 @@ function App() {
               <Route path='/' element={<Menu />} />
               <Route path='/offers' element={<Offers />} />
               <Route path='/cart' element={<Cart />} />
-              <Route path='/admin/offers' element={<PrivateRoute><AdminOffers /></PrivateRoute>} />
+              <Route path='/orders' element={<PrivateRoute><Orders /></PrivateRoute>} />
+              <Route path='/gestion/offers' element={<PrivateRoute><AdminOffers /></PrivateRoute>} />
             </Routes>
           </CartProvider>
         </AuthProvider>

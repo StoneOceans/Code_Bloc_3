@@ -4,10 +4,13 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
-from .models import Note, Offer, Purchase
+from .models import Note, Offer, Purchase, UserProfile
 import secrets
-from .serializer import NoteSerializer, UserRegisterSerializer , UserSerializer, OfferSerializer
+from .serializer import NoteSerializer, UserRegisterSerializer , UserSerializer, OfferSerializer, PurchaseSerializer
 # Create your views here.
+from io import BytesIO
+import base64
+import qrcode
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import(
@@ -229,3 +232,34 @@ def make_purchase(request):
         'purchase_id': purchase.id,
         'final_key': final_key,  
     })
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_purchase(request):
+    cart_items = request.data.get('cart', [])
+    second_key = secrets.token_hex(16)
+    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+    final_key = user_profile.secret_key + second_key
+    purchase = Purchase.objects.create(
+        user=request.user,
+        items=str(cart_items),
+        final_key=final_key
+    )
+    qr = qrcode.make(final_key)
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    qr_code = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    return Response({
+        "message": "Achat réussi",
+        "purchase_id": purchase.id,
+        "final_key": final_key,
+        "ticket": qr_code
+    }, status=status.HTTP_201_CREATED)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_orders(request):
+    orders = Purchase.objects.filter(user=request.user).order_by("-created_at")
+    serializer = PurchaseSerializer(orders, many=True)
+    return Response(serializer.data)
+
