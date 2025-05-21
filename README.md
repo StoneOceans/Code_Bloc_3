@@ -48,7 +48,7 @@ Ce projet est une application web full-stack pour la gestion de billets d'évén
 
 ## Requirements
 
-Les prerequis sont present dans /backend/requirements.txt
+Les prerequis sont present dans backend/requirements.txt
 
 ## Installation
 
