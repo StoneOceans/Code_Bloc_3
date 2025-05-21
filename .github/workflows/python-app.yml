@@ -43,3 +43,4 @@ jobs:
       - name: Lancer les tests
         run: |
           pytest .github/workflows/test_main.py
+          
