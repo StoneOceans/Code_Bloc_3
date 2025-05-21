@@ -128,6 +128,39 @@ Exemple de règles pour `.gitignore` à la racine `app_code` :
 | `/api/purchase/`      | POST     | Oui              | Achat + génération de QR code         |
 | `/api/orders/`        | GET      | Oui              | Historique des achats                 |
 
+## Déploiement avec Docker
+
+Cette section décrit comment packager et déployer l’application Django + React avec Docker et Docker Compose.
+
+### 1. Structure des fichiers Docker
+
+Place à la racine de ton projet (`/`) :
+
+├── backend/
+│ └── Dockerfile
+├
+├── webserver
+│    └── Dockerfile
+└── docker-compose.yml
+
+
+Build et démarrage de tous les services
+  Depuis la racine du projet, lance :
+
+'sudo docker-compose up -d --build'
+
+
+Générer manuellement le build React
+
+cd frontend
+npm install
+npm run build
+
+puis redéploie l’image :
+
+cd ..
+sudo docker-compose up -d --build webserver
+
 ##
 
 ##
