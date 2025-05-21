@@ -21,7 +21,7 @@ Ce projet est une application web full-stack pour la gestion de billets d'évén
 * Django REST Framework
 * Simple JWT (authentification par cookies)
 * qrcode (génération de QR codes)
-* MySQL&#x20;
+* MySQL;
 * CORS headers
 
 ### Frontend
@@ -46,11 +46,9 @@ Ce projet est une application web full-stack pour la gestion de billets d'évén
 └── .gitignore
 ```
 
-## Prérequis
+## Requirements
 
-* Python 3.10+ et pip
-* Node.js 16+ et npm (ou yarn)
-* MySQL (ou SQLite)
+Les prerequis sont present dans /backend/requirements.txt
 
 ## Installation
 
@@ -94,7 +92,7 @@ L'application React sera accessible sur `http://localhost:3000`.
 Dans `backend/settings.py`, ajuster :
 
 * `SECRET_KEY`
-* Paramètres de base de données (MySQL ou SQLite)
+* Paramètres de base de données 
 * `ALLOWED_HOSTS` et `CORS_ALLOWED_ORIGINS`
 
 ## Git Ignore
