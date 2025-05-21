@@ -23,3 +23,13 @@ def test_connexion_utilisateur():
     }
     response = requests.post(f"{BASE_URL}/login", json=payload)
     assert response.status_code in (200, 201)
+
+def test_offers_page():
+    response = requests.get(f"{BASE_URL}/offers")
+    assert response.status_code == 200
+    assert "Offers" in response.text or "offre" in response.text.lower()
+
+def test_cart_page():
+    response = requests.get(f"{BASE_URL}/cart")
+    assert response.status_code == 200
+    assert "Cart" in response.text or "panier" in response.text.lower()
