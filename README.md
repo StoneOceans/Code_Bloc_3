@@ -35,7 +35,6 @@ Ce projet est une application web full-stack pour la gestion de billets d'évén
 ## Structure du Projet
 
 ```
-app_code/
 ├── backend/              # Projet Django
 │   ├── base/             # App principale 
 │   ├── backend/          # settings, urls, wsgi
