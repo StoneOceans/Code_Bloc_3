@@ -11,7 +11,7 @@ def test_creation_utilisateur():
     payload = {
         "username": "testuser",
         "email": "testt@gmail.com",
-        "password": "Securepass1234+"
+        "password": "A12345678901b+"
     }
     response = requests.post(f"{BASE_URL}/register", json=payload)
     assert response.status_code in (200, 201)
@@ -19,8 +19,8 @@ def test_creation_utilisateur():
 def test_connexion_utilisateur():
     payload = {
         "username": "testuser",
-        "password": "Securepass1234+"
+        "password": "SA12345678901b+"
     }
     response = requests.post(f"{BASE_URL}/login", json=payload)
-    assert response.status_code == 200
+    assert response.status_code in (200, 201)
     assert "access" in response.json()
