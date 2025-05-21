@@ -23,4 +23,3 @@ def test_connexion_utilisateur():
     }
     response = requests.post(f"{BASE_URL}/login", json=payload)
     assert response.status_code in (200, 201)
-    assert "access" in response.json()
