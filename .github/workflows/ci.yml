@@ -46,8 +46,7 @@ jobs:
           poetry install --no-interaction --no-ansi
 
       - name: Apply migrations
-        run: |
-          poetry run python manage.py migrate --noinput
+        run: poetry run python manage.py migrate --noinput
 
       - name: Run Django tests & collect coverage
         run: |
@@ -55,13 +54,11 @@ jobs:
           poetry run coverage report
 
       - name: Lint with flake8
-        run: |
-          poetry run flake8
+        run: poetry run flake8
 
   frontend:
     name: Frontend React
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -94,13 +91,13 @@ jobs:
           path: frontend/build
 
   deploy:
-    name: Déploiement (facultatif)
+    name: Déploiement SSH
     needs: [backend, frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Télécharger artefacts front
+      - name: Download frontend-build
         uses: actions/download-artifact@v3
         with:
           name: frontend-build
@@ -109,7 +106,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Déployer sur serveur SSH
+      - name: Deploy to SSH server
         uses: appleboy/ssh-action@v0.1.9
         with:
           host: ${{ secrets.SERVER_HOST }}
