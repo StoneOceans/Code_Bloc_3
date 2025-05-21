@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_db_test
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data_test:/var/lib/mysql
+    ports:
+      - "3307:3306" # Utilise le port 3307 sur l'hôte pour éviter les conflits si MySQL tourne déjà sur 3306
+    networks:
+      - app-network-test
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: django_backend_test
+    volumes:
+      - ./backend:/app
+      - django_static_volume_test:/app/staticfiles
+      - django_media_volume_test:/app/mediafiles
+    environment:
+      PYTHONUNBUFFERED: 1
+      DJANGO_SETTINGS_MODULE: backend.settings # Remplacez par le nom de votre projet Django
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DEBUG: ${DEBUG}
+      DB_ENGINE: django.db.backends.mysql
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_HOST: db # Nom du service MySQL
+      DB_PORT: 3306 # Port interne de MySQL dans le réseau Docker
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+    depends_on:
+      - db
+    networks:
+      - app-network-test
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  webserver:
+    build:
+      context: .
+      dockerfile: webserver/Dockerfile
+    container_name: apache_webserver_test
+    ports:
+      - "8089:80"
+    volumes:
+      - ./frontend/build:/var/www/frontend_app:ro
+      - django_static_volume_test:/var/www/django_static:ro
+      - django_media_volume_test:/var/www/django_media:ro
+    depends_on:
+      - backend
+    networks:
+      - app-network-test
+    restart: unless-stopped
+
+networks:
+  app-network-test:
+    driver: bridge
+
+volumes:
+  mysql_data_test:
+  django_static_volume_test:
+  django_media_volume_test:
