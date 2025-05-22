@@ -161,6 +161,21 @@ puis redéploie l’image :
 cd ..
 sudo docker-compose up -d --build webserver
 
+Tests unitaires
+
+Les tests unitaires sont définis dans le fichier test_main.py. Pour les exécuter :
+
+pytest test_main.py --maxfail=1 --disable-warnings -q
+
+Couverture actuelle : 41% (objectif ≥ 80%)
+
+Fichiers testés :
+
+base/authentication.py : 100%
+
+base/validators.py : 100%
+
+base/views.py : 31%
 ##
 
 ##
