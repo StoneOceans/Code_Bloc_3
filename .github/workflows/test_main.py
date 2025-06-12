@@ -1,6 +1,4 @@
-import pytest
-import requests
-from faker import Faker
+import pytest, requests, uuid
 
 BASE_URL = "https://sitedesjo.dev-data.eu"
 
@@ -9,31 +7,23 @@ def session():
     return requests.Session()
 
 @pytest.fixture
-def faker():
-    return Faker()
+def random_credentials():
+    u = uuid.uuid4().hex[:8]
+    return {
+        "username": f"user_{u}",
+        "email": f"{u}@example.com",
+        "password": f"Pwd!{u}A1"
+    }
 
 @pytest.fixture
-def new_user(session, faker):
-    """Registers a new user and logs in, returning its credentials."""
-    creds = {
-        "username": faker.user_name(),
-        "email": faker.email(),
-        "password": faker.password(
-            length=12,
-            special_chars=True,
-            digits=True,
-            upper_case=True,
-            lower_case=True
-        )
-    }
-    # Register
+def new_user(session, random_credentials):
+    creds = random_credentials
+    # register
     r = session.post(f"{BASE_URL}/register", json=creds)
     assert r.status_code in (200, 201)
-    # Login
-    r = session.post(
-        f"{BASE_URL}/login",
-        json={"username": creds["username"], "password": creds["password"]}
-    )
+    # login
+    r = session.post(f"{BASE_URL}/login",
+                     json={"username": creds["username"], "password": creds["password"]})
     assert r.status_code == 200
     token = r.json().get("token")
     assert token, "No token returned"
@@ -41,8 +31,8 @@ def new_user(session, faker):
     return creds
 
 def test_site_is_up(session):
-    r = session.get(BASE_URL)
-    assert r.status_code == 200
+    assert session.get(BASE_URL).status_code == 200
+
 
 @pytest.mark.parametrize("endpoint", ["/offers", "/cart"])
 def test_public_pages(session, endpoint):
