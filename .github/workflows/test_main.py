@@ -36,8 +36,8 @@ def new_user(session, random_credentials):
 # test_main.py
 import pytest
 import requests
-from conftest import BASE_URL
 
+BASE_URL = "https://sitedesjo.dev-data.eu"
 
 def test_site_is_up(session):
     r = session.get(BASE_URL)
