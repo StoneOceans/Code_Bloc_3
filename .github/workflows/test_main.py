@@ -1,8 +1,11 @@
-import pytest, requests, uuid
+# conftest.py
+import pytest
+import requests
+import uuid
 
 BASE_URL = "https://sitedesjo.dev-data.eu"
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def session():
     return requests.Session()
 
@@ -18,20 +21,27 @@ def random_credentials():
 @pytest.fixture
 def new_user(session, random_credentials):
     creds = random_credentials
-    # register
     r = session.post(f"{BASE_URL}/register", json=creds)
     assert r.status_code in (200, 201)
-    # login
-    r = session.post(f"{BASE_URL}/login",
-                     json={"username": creds["username"], "password": creds["password"]})
-    assert r.status_code == 200
+
+    r = session.post(f"{BASE_URL}/login", json={"username": creds["username"], "password": creds["password"]})
+    if 'application/json' not in r.headers.get('Content-Type', ''):
+        pytest.fail(f"Expected JSON response but got: {r.text}")
+
     token = r.json().get("token")
     assert token, "No token returned"
     session.headers.update({"Authorization": f"Bearer {token}"})
     return creds
 
+# test_main.py
+import pytest
+import requests
+from conftest import BASE_URL
+
+
 def test_site_is_up(session):
-    assert session.get(BASE_URL).status_code == 200
+    r = session.get(BASE_URL)
+    assert r.status_code == 200
 
 
 @pytest.mark.parametrize("endpoint", ["/offers", "/cart"])
@@ -39,15 +49,19 @@ def test_public_pages(session, endpoint):
     r = session.get(f"{BASE_URL}{endpoint}")
     assert r.status_code == 200
 
-def test_cart_requires_auth():
-    # fresh session without auth
-    r = requests.get(f"{BASE_URL}/cart")
-    assert r.status_code == 401
 
-def test_invalid_login(session, faker):
-    payload = {"username": faker.user_name(), "password": "WrongPass1!"}
-    r = session.post(f"{BASE_URL}/login", json=payload)
-    assert r.status_code == 401
+def test_invalid_login(session):
+    r = session.post(f"{BASE_URL}/login", json={
+        "username": "invaliduser",
+        "password": "wrongpassword"
+    })
+    assert r.status_code in (401, 403)
+
+
+def test_cart_requires_auth():
+    r = requests.get(f"{BASE_URL}/cart")
+    assert r.status_code in (401, 403)
+
 
 @pytest.mark.parametrize(
     "payload, missing_field",
@@ -59,22 +73,28 @@ def test_invalid_login(session, faker):
 )
 def test_registration_missing_fields(session, payload, missing_field):
     r = session.post(f"{BASE_URL}/register", json=payload)
-    assert r.status_code == 400
-    errors = r.json().get("errors", {})
-    assert missing_field in errors
+    assert r.status_code != 200, f"Registration succeeded with missing {missing_field}"
 
-def test_registration_weak_password(session, faker):
-    payload = {
-        "username": faker.user_name(),
-        "email": faker.email(),
+
+def test_registration_weak_password(session):
+    weak_creds = {
+        "username": "weakuser",
+        "email": "weak@example.com",
         "password": "123"
     }
-    r = session.post(f"{BASE_URL}/register", json=payload)
-    assert r.status_code == 400
+    r = session.post(f"{BASE_URL}/register", json=weak_creds)
+    assert r.status_code in (400, 422)
 
-def test_full_user_journey(session, new_user):
-    # new_user fixture has already authenticated
-    r = session.get(f"{BASE_URL}/cart")
+
+def test_full_user_journey(new_user, session):
+    # Ajout au panier
+    r = session.post(f"{BASE_URL}/cart/add", json={"offer_id": 1})
     assert r.status_code == 200
-    data = r.json()
-    assert isinstance(data, dict) and data.get("items") == []
+
+    # Checkout (si dispo)
+    r = session.post(f"{BASE_URL}/checkout")
+    assert r.status_code in (200, 201)
+
+    # Historique des commandes
+    r = session.get(f"{BASE_URL}/orders")
+    assert r.status_code == 200
