@@ -1,6 +1,7 @@
 # test_main.py
 import pytest
 import requests
+import uuid
 
 BASE_URL = "https://sitedesjo.dev-data.eu"
 
