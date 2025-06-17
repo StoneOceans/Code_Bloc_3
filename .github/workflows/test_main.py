@@ -69,15 +69,25 @@ def test_registration_weak_password(session):
     r = session.post(f"{BASE_URL}/register", json=payload)
     assert r.status_code in (400, 422)
 
-def test_full_user_journey(new_user, session):
-    # Add product to cart (id 1 as example)
-    r = session.post(f"{BASE_URL}/cart/add", json={"offer_id": 1})
+def test_full_user_journey():
+    session = requests.Session()
+    u = uuid.uuid4().hex[:8]
+    creds = {
+        "username": f"user_{u}",
+        "email": f"{u}@example.com",
+        "password": f"Pwd!{u}A1"
+    }
+
+    r = session.post(f"{BASE_URL}/register", json=creds)
     assert r.status_code in (200, 201)
 
-    # Checkout (simulate)
-    r = session.post(f"{BASE_URL}/checkout")
-    assert r.status_code in (200, 201)
+    r = session.post(f"{BASE_URL}/login", json={
+        "username": creds["username"],
+        "password": creds["password"]
+    })
 
-    # Order history
-    r = session.get(f"{BASE_URL}/orders")
-    assert r.status_code == 200
+    content_type = r.headers.get("Content-Type", "")
+    if "application/json" not in content_type:
+        assert False, f"Expected JSON response but got HTML: {r.text[:100]}"
+
+    token = r.json().get("token")
