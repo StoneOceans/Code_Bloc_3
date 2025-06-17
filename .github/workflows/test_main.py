@@ -48,7 +48,7 @@ def test_connexion_utilisateur():
     response = requests.post(f"{BASE_URL}/login", json=payload)
 
 
-    assert response.status_code in (200, 201)Add commentMore actions
+    assert response.status_code in (200, 201)
 
 
     assert response.status_code == 200
