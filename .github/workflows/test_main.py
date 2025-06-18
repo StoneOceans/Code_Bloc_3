@@ -40,7 +40,7 @@ def test_invalid_login(session):
         "password": "wrongpass"
     }
     r = requests.post(f"{BASE_URL}/register", json=payload)
-    assert r.status_code in (200,401, 403)
+    assert r.status_code in (200, 401, 403)
 
 @pytest.mark.parametrize(
     "payload, missing_field",
@@ -63,8 +63,8 @@ def test_registration_weak_password(session):
         "password": "123"
     }
     r = session.post(f"{BASE_URL}/register", json=payload)
-    assert r.status_code in (403,400, 422)
-    
+    assert r.status_code in (403, 400, 422)
+
 def test_full_user_journey():
     session = requests.Session()
     u = uuid.uuid4().hex[:8]
@@ -98,3 +98,21 @@ def test_full_user_journey():
 
     r = session.get(f"{BASE_URL}/orders")
     assert r.status_code == 200
+
+def test_app_config():
+    from base.apps import BaseConfig
+    from django.apps import apps
+    assert BaseConfig.name == "base"
+    assert apps.get_app_config("base").name == "base"
+
+def test_admin_registration():
+    from django.contrib import admin
+    from base import admin as base_admin
+    from base.models import Offer
+    assert Offer in admin.site._registry
+
+def test_urls_resolvable():
+    from django.urls import resolve
+    assert resolve('/register').func.__name__ == 'register_user'
+    assert resolve('/login').func.__name__ == 'login_user'
+    assert resolve('/offers').func.__name__ == 'get_offers'
