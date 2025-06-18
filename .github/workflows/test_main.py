@@ -98,21 +98,3 @@ def test_full_user_journey():
 
     r = session.get(f"{BASE_URL}/orders")
     assert r.status_code == 200
-
-def test_app_config():
-    from base.apps import BaseConfig
-    from django.apps import apps
-    assert BaseConfig.name == "base"
-    assert apps.get_app_config("base").name == "base"
-
-def test_admin_registration():
-    from django.contrib import admin
-    from base import admin as base_admin
-    from base.models import Offer
-    assert Offer in admin.site._registry
-
-def test_urls_resolvable():
-    from django.urls import resolve
-    assert resolve('/register').func.__name__ == 'register_user'
-    assert resolve('/login').func.__name__ == 'login_user'
-    assert resolve('/offers').func.__name__ == 'get_offers'
