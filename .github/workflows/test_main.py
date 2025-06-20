@@ -47,15 +47,15 @@ def test_remove_from_cart():
 def test_cart_access():
     r = requests.get(f"{BASE_URL}/cart")
     assert r.status_code in (200, 401, 403)
-
-@pytest.mark.xfail(reason="Le backend accepte les connexions invalides sans rejet explicite.")
+    
 def test_invalid_login(session):
+    """Le backend doit refuser une connexion avec des identifiants invalides."""
     payload = {
         "username": "invalid_user",
         "password": "wrongpass"
     }
     r = session.post(f"{BASE_URL}/login", json=payload)
-    assert r.status_code in (401, 403), f"Réponse inattendue : {r.status_code}"
+    assert r.status_code in (401, 403), f"Connexion invalide acceptée (code : {r.status_code})"
 
 @pytest.mark.parametrize(
     "payload, missing_field",
@@ -65,21 +65,20 @@ def test_invalid_login(session):
         ({"username": "foo", "email": "a@b.c"}, "password"),
     ],
 )
-@pytest.mark.xfail(reason="Le backend accepte les enregistrements avec des champs manquants.")
 def test_registration_missing_fields(session, payload, missing_field):
+    """Le backend doit refuser tout enregistrement avec des champs manquants."""
     r = session.post(f"{BASE_URL}/register", json=payload)
-    assert r.status_code not in (200, 201), f"L'enregistrement a réussi malgré l'absence du champ : {missing_field}"
+    assert r.status_code in (400, 422), f"Inscription autorisée sans le champ '{missing_field}' (code : {r.status_code})"
 
-@pytest.mark.xfail(reason="Le backend accepte des mots de passe trop faibles.")
 def test_registration_weak_password(session):
+    """Le backend doit refuser les mots de passe trop faibles."""
     payload = {
         "username": "weakuser",
         "email": "weak@example.com",
-        "password": "123"  
+        "password": "123"  # Trop simple
     }
     r = session.post(f"{BASE_URL}/register", json=payload)
-    assert r.status_code in (400, 403, 422), f"Réponse inattendue pour un mot de passe faible : {r.status_code}"
-
+    assert r.status_code in (400, 422), f"Inscription acceptée avec mot de passe faible (code : {r.status_code})"
 
 def test_full_user_journey():
     session = requests.Session()
