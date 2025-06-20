@@ -121,8 +121,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             return res
         
         except Exception as e:
-            print(e)
-            return Response({'success':False})
+            return Response({'success': False}, status=401)
+
         
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
