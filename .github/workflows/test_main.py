@@ -2,7 +2,7 @@ import pytest
 import requests
 import uuid
 
-BASE_URL = "https://sitedesjo.dev-data.eu"  # à adapter si nécessaire
+BASE_URL = "https://sitedesjo.dev-data.eu"  
 
 
 @pytest.fixture
@@ -98,4 +98,22 @@ def test_login_invalid_password(session):
         "password": "123"
     })
     assert r.status_code in (200,401, 403), f"Mauvais mot de passe veuillez le changer(code : {r.status_code})"
+
+def test_login_then_logout(session):
+    """Connexion valide puis logout : les cookies doivent disparaître."""
+    u = uuid.uuid4().hex[:6]
+    user = {
+        "username": f"user_{u}",
+        "email": f"{u}@example.com",
+        "password": f"Aa12345678!{u}"
+    }
+
+    session.post(f"{BASE_URL}/register", json=user)
+    session.post(f"{BASE_URL}/login", json={
+        "username": user["username"],
+        "password": user["password"]
+    })
+
+    r = session.post(f"{BASE_URL}/logout")
+    assert r.status_code == 200
 
