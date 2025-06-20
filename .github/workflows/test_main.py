@@ -4,6 +4,11 @@ import uuid
 
 BASE_URL = "https://sitedesjo.dev-data.eu"
 
+@pytest.fixture
+def session():
+    with requests.Session() as s:
+        yield s
+
 def test_site_is_up():
     r = requests.get(BASE_URL)
     assert r.status_code == 200
