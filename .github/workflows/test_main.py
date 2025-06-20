@@ -48,14 +48,14 @@ def test_cart_access():
     r = requests.get(f"{BASE_URL}/cart")
     assert r.status_code in (200, 401, 403)
 
-@pytest.mark.xfail(reason="Back-end accepte les connexions invalides sans rejet explicite")
+@pytest.mark.xfail(reason="Le backend accepte les connexions invalides sans rejet explicite.")
 def test_invalid_login(session):
     payload = {
         "username": "invalid_user",
         "password": "wrongpass"
     }
-    r = requests.post(f"{BASE_URL}/register", json=payload)
-    assert r.status_code in (200, 401, 403)
+    r = session.post(f"{BASE_URL}/login", json=payload)
+    assert r.status_code in (401, 403), f"Réponse inattendue : {r.status_code}"
 
 @pytest.mark.parametrize(
     "payload, missing_field",
@@ -65,20 +65,21 @@ def test_invalid_login(session):
         ({"username": "foo", "email": "a@b.c"}, "password"),
     ],
 )
-@pytest.mark.xfail(reason="Back-end accepte les enregistrements incomplets")
+@pytest.mark.xfail(reason="Le backend accepte les enregistrements avec des champs manquants.")
 def test_registration_missing_fields(session, payload, missing_field):
     r = session.post(f"{BASE_URL}/register", json=payload)
-    assert r.status_code != 200, f"Registration succeeded with missing {missing_field}"
+    assert r.status_code not in (200, 201), f"L'enregistrement a réussi malgré l'absence du champ : {missing_field}"
 
-@pytest.mark.xfail(reason="Back-end accepte des mots de passe trop faibles")
+@pytest.mark.xfail(reason="Le backend accepte des mots de passe trop faibles.")
 def test_registration_weak_password(session):
     payload = {
         "username": "weakuser",
         "email": "weak@example.com",
-        "password": "123"
+        "password": "123"  # Mot de passe trop faible
     }
     r = session.post(f"{BASE_URL}/register", json=payload)
-    assert r.status_code in (403, 400, 422)
+    assert r.status_code in (400, 403, 422), f"Réponse inattendue pour un mot de passe faible : {r.status_code}"
+
 
 def test_full_user_journey():
     session = requests.Session()
