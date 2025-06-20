@@ -75,7 +75,7 @@ def test_registration_weak_password(session):
     payload = {
         "username": "weakuser",
         "email": "weak@example.com",
-        "password": "123"  # Mot de passe trop faible
+        "password": "123"  
     }
     r = session.post(f"{BASE_URL}/register", json=payload)
     assert r.status_code in (400, 403, 422), f"Réponse inattendue pour un mot de passe faible : {r.status_code}"
