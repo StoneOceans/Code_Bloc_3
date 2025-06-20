@@ -95,7 +95,7 @@ def test_login_invalid_password(session):
 
     r = session.post(f"{BASE_URL}/login", json={
         "username": creds["username"],
-        "password": "incorrectPassword123!"
+        "password": "123"
     })
     assert r.status_code in (401, 403), f"Mauvais mot de passe accepté (code : {r.status_code})"
 
