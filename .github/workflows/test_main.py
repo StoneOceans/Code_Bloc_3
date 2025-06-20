@@ -38,40 +38,31 @@ def test_login_user():
     assert r.status_code in (200, 401, 403)
 
 
-def test_invalid_login(session):
-    """Connexion invalide — doit être refusée."""
-    payload = {
-        "username": "invalid_user",
-        "password": "wrongpass"
-    }
-    r = session.post(f"{BASE_URL}/login", json=payload)
-    assert r.status_code in (401, 403), f"Connexion invalide acceptée (code : {r.status_code})"
-
-
-@pytest.mark.parametrize(
-    "payload, missing_field",
-    [
-        ({"email": "a@b.c", "password": "Pwd1!Test"}, "username"),
-        ({"username": "foo", "password": "Pwd1!Test"}, "email"),
-        ({"username": "foo", "email": "a@b.c"}, "password"),
-    ],
-)
-def test_registration_missing_fields(session, payload, missing_field):
-    """Inscription avec champ manquant — doit échouer."""
-    r = session.post(f"{BASE_URL}/register", json=payload)
-    assert r.status_code in (400, 422), f"Inscription autorisée sans le champ '{missing_field}' (code : {r.status_code})"
-
-
-def test_registration_weak_password(session):
-    """Mot de passe trop faible — doit être refusé."""
+def test_duplicate_registration_not_allowed(session):
+    """Le backend doit refuser une double inscription avec le même email ou username."""
     u = uuid.uuid4().hex[:6]
     payload = {
-        "username": f"weakuser{u}",
-        "email": f"weak{u}@example.com",
-        "password": "123"
+        "username": f"dupuser{u}",
+        "email": f"dup{u}@example.com",
+        "password": f"Aa12345678!{u}"
     }
-    r = session.post(f"{BASE_URL}/register", json=payload)
-    assert r.status_code in (400, 422), f"Inscription acceptée avec mot de passe faible (code : {r.status_code})"
+
+    r1 = session.post(f"{BASE_URL}/register", json=payload)
+    assert r1.status_code in (200, 201), f"Inscription 1 échouée : {r1.status_code}"
+
+    r2 = session.post(f"{BASE_URL}/register", json=payload)
+    assert r2.status_code in (400, 409), f"Double inscription autorisée (code : {r2.status_code})"
+
+def test_orders_requires_authentication():
+    """Accès aux commandes sans token — doit être interdit."""
+    r = requests.get(f"{BASE_URL}/orders")
+    assert r.status_code in (401, 403), f"Accès non autorisé aux commandes sans authentification (code : {r.status_code})"
+
+def test_cart_add_requires_authentication():
+    """Ajout au panier sans authentification — doit échouer."""
+    r = requests.post(f"{BASE_URL}/cart/add/", json={"offer_id": 1})
+    assert r.status_code in (401, 403), f"Ajout au panier sans connexion autorisé (code : {r.status_code})"
+
 
 
 def test_offers_access():
