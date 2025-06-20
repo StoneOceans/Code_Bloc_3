@@ -136,3 +136,77 @@ def test_full_user_journey():
 
     r = session.get(f"{BASE_URL}/orders")
     assert r.status_code == 200
+
+def get_token_and_login(session, username, password):
+    r = session.post(f"{BASE_URL}/login", json={
+        "username": username,
+        "password": password
+    })
+    if r.status_code == 200 and "application/json" in r.headers.get("Content-Type", ""):
+        token = r.json().get("access")
+        if token:
+            session.headers.update({"Authorization": f"Bearer {token}"})
+            return True
+    return False
+
+
+def test_remove_from_cart(session):
+    """Ajoute puis supprime un article du panier, et vérifie que ça fonctionne."""
+    u = uuid.uuid4().hex[:6]
+    creds = {
+        "username": f"user_{u}",
+        "email": f"{u}@example.com",
+        "password": f"Pwd!{u}A1"
+    }
+
+    session.post(f"{BASE_URL}/register", json=creds)
+    assert get_token_and_login(session, creds["username"], creds["password"])
+
+    # Ajout au panier
+    r = session.post(f"{BASE_URL}/cart/add/", json={"offer_id": 1})
+    assert r.status_code in (200, 201)
+
+    # Suppression
+    r = session.post(f"{BASE_URL}/cart/remove/", json={"offer_id": 1})
+    assert r.status_code == 200
+
+    # Vérifie que le panier est vide
+    r = session.get(f"{BASE_URL}/cart")
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
+    assert not r.json(), "Le panier devrait être vide après suppression."
+
+
+def test_total_price_updates_correctly(session):
+    """Vérifie que le total du panier change correctement quand on ajoute puis supprime une offre."""
+    u = uuid.uuid4().hex[:6]
+    creds = {
+        "username": f"user_{u}",
+        "email": f"{u}@example.com",
+        "password": f"Pwd!{u}A1"
+    }
+
+    session.post(f"{BASE_URL}/register", json=creds)
+    assert get_token_and_login(session, creds["username"], creds["password"])
+
+    # Panier vide au départ
+    r = session.get(f"{BASE_URL}/cart")
+    assert r.status_code == 200
+    initial_items = r.json()
+    initial_total = sum(item.get("price", 0) for item in initial_items)
+
+    # Ajout
+    r = session.post(f"{BASE_URL}/cart/add/", json={"offer_id": 1})
+    assert r.status_code in (200, 201)
+
+    r = session.get(f"{BASE_URL}/cart")
+    updated_items = r.json()
+    updated_total = sum(item.get("price", 0) for item in updated_items)
+    assert updated_total > initial_total, "Le prix total du panier n’a pas augmenté après ajout."
+
+    # Suppression
+    session.post(f"{BASE_URL}/cart/remove/", json={"offer_id": 1})
+    r = session.get(f"{BASE_URL}/cart")
+    final_items = r.json()
+    final_total = sum(item.get("price", 0) for item in final_items)
+    assert final_total == initial_total, "Le prix total du panier ne s’est pas remis à l’état initial après suppression."
