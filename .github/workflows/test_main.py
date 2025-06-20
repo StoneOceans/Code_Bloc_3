@@ -38,10 +38,10 @@ def test_remove_from_cart():
         "password": "A12345678901b+"
     }
     
-    r = session.post(f"{API_URL}/cart/add/", json={"offer_id": 1})
+    r = session.post(f"{BASE_URL}/cart/add/", json={"offer_id": 1})
     assert r.status_code in (200, 201), f"Échec de l'ajout au panier: {r.text}"
 
-    r = session.post(f"{API_URL}/cart/remove/", json={"offer_id": 1})
+    r = session.post(f"{BASE_URL}/cart/remove/", json={"offer_id": 1})
     assert r.status_code == 200, f"Échec de la suppression du panier: {r.text}"
 
 def test_cart_access():
