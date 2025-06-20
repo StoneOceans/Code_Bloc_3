@@ -2,27 +2,34 @@ import pytest
 import requests
 import uuid
 
-BASE_URL = "https://sitedesjo.dev-data.eu"
+BASE_URL = "https://sitedesjo.dev-data.eu"  # à adapter si nécessaire
+
 
 @pytest.fixture
 def session():
     with requests.Session() as s:
         yield s
 
+
 def test_site_is_up():
     r = requests.get(BASE_URL)
     assert r.status_code == 200
 
+
 def test_register_user():
+    """Test d'inscription avec des données valides."""
+    u = uuid.uuid4().hex[:8]
     payload = {
-        "username": "testuser1",
-        "email": "test1@example.com",
-        "password": "A12345678901b+"
+        "username": f"user_{u}",
+        "email": f"{u}@example.com",
+        "password": f"A123456!{u}"
     }
     r = requests.post(f"{BASE_URL}/register", json=payload)
-    assert r.status_code in (200, 201)
+    assert r.status_code in (200, 201), f"Inscription échouée : {r.status_code} — {r.text}"
+
 
 def test_login_user():
+    """Test de connexion avec des identifiants valides (utilisateur déjà inscrit)."""
     payload = {
         "username": "testuser1",
         "password": "A12345678901b+"
@@ -30,31 +37,9 @@ def test_login_user():
     r = requests.post(f"{BASE_URL}/login", json=payload)
     assert r.status_code in (200, 401, 403)
 
-def test_offers_access():
-    r = requests.get(f"{BASE_URL}/offers")
-    assert r.status_code == 200
-    
-def test_remove_from_cart():
-    session = requests.Session()
-    u = uuid.uuid4().hex[:8]
-    creds = {
-        "username": "testuser1",
-        "email": "test1@example.com",
-        "password": "A12345678901b+"
-    }
-    
-    r = session.post(f"{BASE_URL}/cart/add/", json={"offer_id": 1})
-    assert r.status_code in (200, 201), f"Échec de l'ajout au panier: {r.text}"
 
-    r = session.post(f"{BASE_URL}/cart/remove/", json={"offer_id": 1})
-    assert r.status_code == 200, f"Échec de la suppression du panier: {r.text}"
-
-def test_cart_access():
-    r = requests.get(f"{BASE_URL}/cart")
-    assert r.status_code in (200, 401, 403)
-    
 def test_invalid_login(session):
-    """Le backend doit refuser une connexion avec des identifiants invalides."""
+    """Connexion invalide — doit être refusée."""
     payload = {
         "username": "invalid_user",
         "password": "wrongpass"
@@ -62,30 +47,72 @@ def test_invalid_login(session):
     r = session.post(f"{BASE_URL}/login", json=payload)
     assert r.status_code in (401, 403), f"Connexion invalide acceptée (code : {r.status_code})"
 
+
 @pytest.mark.parametrize(
     "payload, missing_field",
     [
-        ({"email": "a@b.c", "password": "Pwd1!"}, "username"),
-        ({"username": "foo", "password": "Pwd1!"}, "email"),
+        ({"email": "a@b.c", "password": "Pwd1!Test"}, "username"),
+        ({"username": "foo", "password": "Pwd1!Test"}, "email"),
         ({"username": "foo", "email": "a@b.c"}, "password"),
     ],
 )
 def test_registration_missing_fields(session, payload, missing_field):
-    """Le backend doit refuser tout enregistrement avec des champs manquants."""
+    """Inscription avec champ manquant — doit échouer."""
     r = session.post(f"{BASE_URL}/register", json=payload)
     assert r.status_code in (400, 422), f"Inscription autorisée sans le champ '{missing_field}' (code : {r.status_code})"
 
+
 def test_registration_weak_password(session):
-    """Le backend doit refuser les mots de passe trop faibles."""
+    """Mot de passe trop faible — doit être refusé."""
+    u = uuid.uuid4().hex[:6]
     payload = {
-        "username": "weakuser",
-        "email": "weak@example.com",
-        "password": "123"  # Trop simple
+        "username": f"weakuser{u}",
+        "email": f"weak{u}@example.com",
+        "password": "123"
     }
     r = session.post(f"{BASE_URL}/register", json=payload)
     assert r.status_code in (400, 422), f"Inscription acceptée avec mot de passe faible (code : {r.status_code})"
 
+
+def test_offers_access():
+    r = requests.get(f"{BASE_URL}/offers")
+    assert r.status_code == 200
+
+
+def test_cart_access():
+    r = requests.get(f"{BASE_URL}/cart")
+    assert r.status_code in (200, 401, 403)
+
+
+def test_remove_from_cart():
+    session = requests.Session()
+    creds = {
+        "username": "testuser1",
+        "email": "test1@example.com",
+        "password": "A12345678901b+"
+    }
+
+    r = session.post(f"{BASE_URL}/login", json={
+        "username": creds["username"],
+        "password": creds["password"]
+    })
+
+    token = None
+    if r.status_code == 200 and "application/json" in r.headers.get("Content-Type", ""):
+        token = r.json().get("access")
+
+    if token:
+        session.headers.update({"Authorization": f"Bearer {token}"})
+
+    r = session.post(f"{BASE_URL}/cart/add/", json={"offer_id": 1})
+    assert r.status_code in (200, 201), f"Ajout au panier échoué : {r.text}"
+
+    r = session.post(f"{BASE_URL}/cart/remove/", json={"offer_id": 1})
+    assert r.status_code == 200, f"Suppression du panier échouée : {r.text}"
+
+
 def test_full_user_journey():
+    """Inscription -> Connexion -> Achat -> Commandes"""
     session = requests.Session()
     u = uuid.uuid4().hex[:8]
     creds = {
@@ -104,10 +131,10 @@ def test_full_user_journey():
 
     content_type = r.headers.get("Content-Type", "")
     if "application/json" not in content_type:
-        pytest.skip("Skipping: /login returned HTML instead of JSON — likely hitting frontend route.")
+        pytest.skip("Connexion retourne du HTML — probablement une redirection front")
 
-    token = r.json().get("token")
-    assert token, "No token returned"
+    token = r.json().get("access")
+    assert token, "Token non retourné"
     session.headers.update({"Authorization": f"Bearer {token}"})
 
     r = session.post(f"{BASE_URL}/cart/add", json={"offer_id": 1})
@@ -118,4 +145,3 @@ def test_full_user_journey():
 
     r = session.get(f"{BASE_URL}/orders")
     assert r.status_code == 200
-
