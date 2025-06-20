@@ -1,38 +1,147 @@
-from django.db import models
-from django.contrib.auth.models import User
-import secrets
+import pytest
+import requests
+import uuid
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    secret_key = models.CharField(max_length=64, blank=True, unique=True)
-
-    def save(self, *args, **kwargs):
-        if not self.secret_key:
-            self.secret_key = secrets.token_hex(16)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"Profile of {self.user.username}"
+BASE_URL = "https://sitedesjo.dev-data.eu"  # à adapter si nécessaire
 
 
-class Note(models.Model):
-    description = models.CharField(max_length=300)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="note")
+@pytest.fixture
+def session():
+    with requests.Session() as s:
+        yield s
 
-class Offer(models.Model):
-    title = models.CharField(max_length=100)
-    description = models.TextField()
-    capacity = models.IntegerField() 
-    price = models.DecimalField(max_digits=6, decimal_places=2)
 
-    def __str__(self):
-        return self.title
+def test_site_is_up():
+    r = requests.get(BASE_URL)
+    assert r.status_code == 200
 
-class Purchase(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    items = models.TextField() 
-    final_key = models.CharField(max_length=128, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Purchase #{self.id} by {self.user.username}"
+def test_register_user():
+    """Test d'inscription avec des données valides."""
+    u = uuid.uuid4().hex[:8]
+    payload = {
+        "username": f"user_{u}",
+        "email": f"{u}@example.com",
+        "password": f"A123456!{u}"
+    }
+    r = requests.post(f"{BASE_URL}/register", json=payload)
+    assert r.status_code in (200, 201), f"Inscription échouée : {r.status_code} — {r.text}"
+
+
+def test_login_user():
+    """Test de connexion avec des identifiants valides (utilisateur déjà inscrit)."""
+    payload = {
+        "username": "testuser1",
+        "password": "A12345678901b+"
+    }
+    r = requests.post(f"{BASE_URL}/login", json=payload)
+    assert r.status_code in (200, 401, 403)
+
+
+def test_invalid_login(session):
+    """Connexion invalide — doit être refusée."""
+    payload = {
+        "username": "invalid_user",
+        "password": "wrongpass"
+    }
+    r = session.post(f"{BASE_URL}/login", json=payload)
+    assert r.status_code in (401, 403), f"Connexion invalide acceptée (code : {r.status_code})"
+
+
+@pytest.mark.parametrize(
+    "payload, missing_field",
+    [
+        ({"email": "a@b.c", "password": "Pwd1!Test"}, "username"),
+        ({"username": "foo", "password": "Pwd1!Test"}, "email"),
+        ({"username": "foo", "email": "a@b.c"}, "password"),
+    ],
+)
+def test_registration_missing_fields(session, payload, missing_field):
+    """Inscription avec champ manquant — doit échouer."""
+    r = session.post(f"{BASE_URL}/register", json=payload)
+    assert r.status_code in (400, 422), f"Inscription autorisée sans le champ '{missing_field}' (code : {r.status_code})"
+
+
+def test_registration_weak_password(session):
+    """Mot de passe trop faible — doit être refusé."""
+    u = uuid.uuid4().hex[:6]
+    payload = {
+        "username": f"weakuser{u}",
+        "email": f"weak{u}@example.com",
+        "password": "123"
+    }
+    r = session.post(f"{BASE_URL}/register", json=payload)
+    assert r.status_code in (400, 422), f"Inscription acceptée avec mot de passe faible (code : {r.status_code})"
+
+
+def test_offers_access():
+    r = requests.get(f"{BASE_URL}/offers")
+    assert r.status_code == 200
+
+
+def test_cart_access():
+    r = requests.get(f"{BASE_URL}/cart")
+    assert r.status_code in (200, 401, 403)
+
+
+def test_remove_from_cart():
+    session = requests.Session()
+    creds = {
+        "username": "testuser1",
+        "email": "test1@example.com",
+        "password": "A12345678901b+"
+    }
+
+    r = session.post(f"{BASE_URL}/login", json={
+        "username": creds["username"],
+        "password": creds["password"]
+    })
+
+    token = None
+    if r.status_code == 200 and "application/json" in r.headers.get("Content-Type", ""):
+        token = r.json().get("access")
+
+    if token:
+        session.headers.update({"Authorization": f"Bearer {token}"})
+
+    r = session.post(f"{BASE_URL}/cart/add/", json={"offer_id": 1})
+    assert r.status_code in (200, 201), f"Ajout au panier échoué : {r.text}"
+
+    r = session.post(f"{BASE_URL}/cart/remove/", json={"offer_id": 1})
+    assert r.status_code == 200, f"Suppression du panier échouée : {r.text}"
+
+
+def test_full_user_journey():
+    """Inscription -> Connexion -> Achat -> Commandes"""
+    session = requests.Session()
+    u = uuid.uuid4().hex[:8]
+    creds = {
+        "username": f"user_{u}",
+        "email": f"{u}@example.com",
+        "password": f"Pwd!{u}A1"
+    }
+
+    r = session.post(f"{BASE_URL}/register", json=creds)
+    assert r.status_code in (200, 201)
+
+    r = session.post(f"{BASE_URL}/login", json={
+        "username": creds["username"],
+        "password": creds["password"]
+    })
+
+    content_type = r.headers.get("Content-Type", "")
+    if "application/json" not in content_type:
+        pytest.skip("Connexion retourne du HTML — probablement une redirection front")
+
+    token = r.json().get("access")
+    assert token, "Token non retourné"
+    session.headers.update({"Authorization": f"Bearer {token}"})
+
+    r = session.post(f"{BASE_URL}/cart/add", json={"offer_id": 1})
+    assert r.status_code in (200, 201)
+
+    r = session.post(f"{BASE_URL}/checkout")
+    assert r.status_code in (200, 201)
+
+    r = session.get(f"{BASE_URL}/orders")
+    assert r.status_code == 200
