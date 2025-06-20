@@ -35,7 +35,7 @@ def test_cart_access():
     assert r.status_code in (401, 403)
 
 @pytest.mark.xfail(reason="Back-end accepte les connexions invalides sans rejet explicite")
-def test_invalid_login(session):
+def test_invalid_login():
     payload = {
         "username": "invalid_user",
         "password": "wrongpass"
@@ -52,7 +52,7 @@ def test_invalid_login(session):
     ],
 )
 @pytest.mark.xfail(reason="Back-end accepte les enregistrements incomplets")
-def test_registration_missing_fields(payload):
+def test_registration_missing_fields(payload, missing_field):
     r = requests.post(f"{BASE_URL}/register", json=payload)
     assert r.status_code != 200, f"Registration succeeded with missing {missing_field}"
 
@@ -93,7 +93,6 @@ def test_remove_from_cart():
     assert len(cart_data.get("items", [])) == 0, "Le panier devrait être vide après suppression."
     assert cart_data.get("total_price", -1) == 0, "Le prix total devrait être 0 après suppression."
 
-
 def test_total_price_updates_correctly():
     session = requests.Session()
     u = uuid.uuid4().hex[:8]
@@ -129,7 +128,6 @@ def test_total_price_updates_correctly():
     session.post(f"{BASE_URL}/cart/remove", json={"offer_id": 1})
     r_cart3 = session.get(f"{BASE_URL}/cart")
     assert r_cart3.json()["total_price"] == price_offer_2
-
 
 def test_full_user_journey():
     session = requests.Session()
