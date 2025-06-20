@@ -3,6 +3,7 @@ import requests
 import uuid
 
 BASE_URL = "https://sitedesjo.dev-data.eu"
+API_URL = f"{BASE_URL}/api" # Utiliser une variable pour le préfixe de l'API
 
 def test_site_is_up():
     r = requests.get(BASE_URL)
@@ -15,7 +16,7 @@ def test_register_user():
         "email": unique_email,
         "password": "A12345678901b+"
     }
-    r = requests.post(f"{BASE_URL}/register", json=payload)
+    r = requests.post(f"{API_URL}/register", json=payload)
     assert r.status_code in (200, 201)
 
 def test_login_user():
@@ -23,15 +24,17 @@ def test_login_user():
         "username": "testuser1",
         "password": "A12345678901b+"
     }
-    r = requests.post(f"{BASE_URL}/login", json=payload)
+    r = requests.post(f"{API_URL}/login", json=payload)
     assert r.status_code in (200, 401, 403)
 
 def test_offers_access():
-    r = requests.get(f"{BASE_URL}/offers")
+    # L'accès à la liste des offres via l'API devrait être public
+    r = requests.get(f"{API_URL}/offers")
     assert r.status_code == 200
 
 def test_cart_access():
-    r = requests.get(f"{BASE_URL}/cart")
+    # L'accès au panier via l'API sans être connecté doit échouer
+    r = requests.get(f"{API_URL}/cart")
     assert r.status_code in (401, 403)
 
 @pytest.mark.xfail(reason="Back-end accepte les connexions invalides sans rejet explicite")
@@ -40,7 +43,7 @@ def test_invalid_login():
         "username": "invalid_user",
         "password": "wrongpass"
     }
-    r = requests.post(f"{BASE_URL}/login", json=payload)
+    r = requests.post(f"{API_URL}/login", json=payload)
     assert r.status_code in (401, 403)
 
 @pytest.mark.parametrize(
@@ -53,7 +56,7 @@ def test_invalid_login():
 )
 @pytest.mark.xfail(reason="Back-end accepte les enregistrements incomplets")
 def test_registration_missing_fields(payload, missing_field):
-    r = requests.post(f"{BASE_URL}/register", json=payload)
+    r = requests.post(f"{API_URL}/register", json=payload)
     assert r.status_code != 200, f"Registration succeeded with missing {missing_field}"
 
 @pytest.mark.xfail(reason="Back-end accepte des mots de passe trop faibles")
@@ -63,7 +66,7 @@ def test_registration_weak_password():
         "email": f"weak_{uuid.uuid4().hex[:4]}@example.com",
         "password": "123"
     }
-    r = requests.post(f"{BASE_URL}/register", json=payload)
+    r = requests.post(f"{API_URL}/register", json=payload)
     assert r.status_code in (400, 422)
 
 def test_remove_from_cart():
@@ -75,19 +78,19 @@ def test_remove_from_cart():
         "password": f"Pwd!{u}A1"
     }
 
-    r = session.post(f"{BASE_URL}/register", json=creds)
+    r = session.post(f"{API_URL}/register", json=creds)
     assert r.status_code in (200, 201), f"Échec de l'inscription: {r.text}"
 
-    r = session.post(f"{BASE_URL}/login", json={"username": creds["username"], "password": creds["password"]})
+    r = session.post(f"{API_URL}/login", json={"username": creds["username"], "password": creds["password"]})
     assert r.status_code == 200, f"Échec de la connexion: {r.text}"
     
-    r = session.post(f"{BASE_URL}/cart/add", json={"offer_id": 1})
+    r = session.post(f"{API_URL}/cart/add", json={"offer_id": 1})
     assert r.status_code in (200, 201), f"Échec de l'ajout au panier: {r.text}"
 
-    r = session.post(f"{BASE_URL}/cart/remove", json={"offer_id": 1})
+    r = session.post(f"{API_URL}/cart/remove", json={"offer_id": 1})
     assert r.status_code == 200, f"Échec de la suppression du panier: {r.text}"
 
-    r = session.get(f"{BASE_URL}/cart")
+    r = session.get(f"{API_URL}/cart")
     assert r.status_code == 200
     cart_data = r.json()
     assert len(cart_data.get("items", [])) == 0, "Le panier devrait être vide après suppression."
@@ -102,12 +105,12 @@ def test_total_price_updates_correctly():
         "password": f"Pwd!{u}A1"
     }
 
-    r = session.post(f"{BASE_URL}/register", json=creds)
+    r = session.post(f"{API_URL}/register", json=creds)
     assert r.status_code in (200, 201)
-    r = session.post(f"{BASE_URL}/login", json={"username": creds["username"], "password": creds["password"]})
+    r = session.post(f"{API_URL}/login", json={"username": creds["username"], "password": creds["password"]})
     assert r.status_code == 200
 
-    r_offers = session.get(f"{BASE_URL}/offers")
+    r_offers = session.get(f"{API_URL}/offers")
     assert r_offers.status_code == 200
     offers = r_offers.json()
     
@@ -116,17 +119,17 @@ def test_total_price_updates_correctly():
     assert price_offer_1 is not None, "L'offre avec id=1 n'a pas été trouvée."
     assert price_offer_2 is not None, "L'offre avec id=2 n'a pas été trouvée."
     
-    session.post(f"{BASE_URL}/cart/add", json={"offer_id": 1})
-    r_cart1 = session.get(f"{BASE_URL}/cart")
+    session.post(f"{API_URL}/cart/add", json={"offer_id": 1})
+    r_cart1 = session.get(f"{API_URL}/cart")
     assert r_cart1.json()["total_price"] == price_offer_1
 
-    session.post(f"{BASE_URL}/cart/add", json={"offer_id": 2})
-    r_cart2 = session.get(f"{BASE_URL}/cart")
+    session.post(f"{API_URL}/cart/add", json={"offer_id": 2})
+    r_cart2 = session.get(f"{API_URL}/cart")
     expected_total = round(price_offer_1 + price_offer_2, 2)
     assert r_cart2.json()["total_price"] == expected_total
 
-    session.post(f"{BASE_URL}/cart/remove", json={"offer_id": 1})
-    r_cart3 = session.get(f"{BASE_URL}/cart")
+    session.post(f"{API_URL}/cart/remove", json={"offer_id": 1})
+    r_cart3 = session.get(f"{API_URL}/cart")
     assert r_cart3.json()["total_price"] == price_offer_2
 
 def test_full_user_journey():
@@ -138,21 +141,21 @@ def test_full_user_journey():
         "password": f"Pwd!{u}A1"
     }
 
-    r = session.post(f"{BASE_URL}/register", json=creds)
+    r = session.post(f"{API_URL}/register", json=creds)
     assert r.status_code in (200, 201)
 
-    r = session.post(f"{BASE_URL}/login", json={
+    r = session.post(f"{API_URL}/login", json={
         "username": creds["username"],
         "password": creds["password"]
     })
     
     assert r.status_code == 200
 
-    r = session.post(f"{BASE_URL}/cart/add", json={"offer_id": 1})
+    r = session.post(f"{API_URL}/cart/add", json={"offer_id": 1})
     assert r.status_code in (200, 201)
 
-    r = session.post(f"{BASE_URL}/checkout")
+    r = session.post(f"{API_URL}/checkout")
     assert r.status_code in (200, 201)
 
-    r = session.get(f"{BASE_URL}/orders")
+    r = session.get(f"{API_URL}/orders")
     assert r.status_code == 200
