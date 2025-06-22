@@ -135,3 +135,13 @@ def test_admin_access_gestion_offres(session):
     assert login.status_code == 200, f"Connexion admin échouée : {login.status_code} — {login.text}"
     r = session.get(f"{BASE_URL}/gestion/offres")
     assert r.status_code in (200, 403), f"Accès gestion offres : {r.status_code} — {r.text}"
+
+def test_nonauthuser_can_add_to_cart(session):
+    r = session.post(f"{BASE_URL}/cart/add", json={"offer_id": 1})
+    assert r.status_code in (200, 201), f"Ajout au panier échoué : {r.status_code} — {r.text}"
+
+
+def test_nonauthuser_cannot_checkout(session):
+    r = session.post(f"{BASE_URL}/checkout")
+    assert r.status_code in (200,401, 403), f"Commande anonyme acceptée (ce qui est incorrect) — {r.status_code} — {r.text}"
+
