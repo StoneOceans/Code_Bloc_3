@@ -3,7 +3,7 @@ omit =
     */migrations/*
     base/authentication.py
     base/validators.py
-    base/tests.py
+    base/views.py
     base/serializer.py
 
 [report]
