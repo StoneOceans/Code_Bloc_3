@@ -4,8 +4,7 @@ omit =
     base/authentication.py
     base/validators.py
     base/tests.py
-    base/serializers.py
-
+    base/serializer.py
 
 [report]
 exclude_lines =
