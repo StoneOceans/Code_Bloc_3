@@ -44,8 +44,16 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: backend.settings
         run: |
+          cd backend      
+          
+      - name: Lancer les tests Django avec couverture
+        env:
+          DJANGO_SETTINGS_MODULE: backend.settings
+        run: |
           cd backend
+          pytest base --ds=backend.settings --cov=base --cov-report=term --cov-report=html
           python manage.py test base
+      
 
       - name: Lancer les tests externes (API en ligne)
         run: |
