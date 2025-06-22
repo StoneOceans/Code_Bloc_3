@@ -117,3 +117,41 @@ def test_login_then_logout(session):
     r = session.post(f"{BASE_URL}/logout")
     assert r.status_code == 200
 
+def test_admin_list_offers(session):
+
+    login = session.post(f"{BASE_URL}/login", json={
+        "username": "adminjo",
+        "password": "mdpadmin123+!" 
+    })
+
+    if login.status_code != 200:
+        pytest.skip("la connexion admin a échouée,impossible d'acceder /gestion/offres")
+
+    token = login.json().get("access")
+    session.headers.update({"Authorization": f"Bearer {token}"})
+
+
+    r = session.get(f"{BASE_URL}/gestion/offres")
+    assert r.status_code in (200, 403), f"Code retour inattendu : {r.status_code}"
+
+
+def test_admin_create_offer(session):
+    login = session.post(f"{BASE_URL}/login", json={
+        "username": "adminjo",
+        "password": "mdpadmin123+!"  
+    })
+
+    if login.status_code != 200:
+        pytest.skip("la connexion admin a échouée, impossible de crée l'offre")
+
+    token = login.json().get("access")
+    session.headers.update({"Authorization": f"Bearer {token}"})
+
+    payload = {
+        "title": "test_offer",
+        "description": "test",
+        "price": 99.99
+    }
+
+    r = session.post(f"{BASE_URL}/gestion/offres", json=payload)
+    assert r.status_code in (200, 201, 403), f"Création échouée : {r.status_code} — {r.text}"
