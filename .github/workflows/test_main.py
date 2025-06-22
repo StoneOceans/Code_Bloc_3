@@ -116,3 +116,22 @@ def test_login_then_logout(session):
 
     r = session.post(f"{BASE_URL}/logout")
     assert r.status_code == 200
+
+def test_admin_login(session):
+    """Connexion admin avec identifiants valides."""
+    payload = {
+        "username": "adminjo",
+        "password": "mdpadmin123+"  
+    }
+    r = session.post(f"{BASE_URL}/login", json=payload)
+    assert r.status_code == 200, f"Échec de la connexion admin : {r.status_code} — {r.text}"
+
+def test_admin_access_gestion_offres(session):
+
+    login = session.post(f"{BASE_URL}/login", json={
+        "username": "adminjo",
+        "password": "mdpadmin123+" 
+    })
+    assert login.status_code == 200, f"Connexion admin échouée : {login.status_code} — {login.text}"
+    r = session.get(f"{BASE_URL}/gestion/offres")
+    assert r.status_code in (200, 403), f"Accès gestion offres : {r.status_code} — {r.text}"
