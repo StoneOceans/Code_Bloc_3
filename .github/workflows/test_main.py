@@ -140,6 +140,9 @@ def test_nonauthuser_can_add_to_cart(session):
     r = session.post(f"{BASE_URL}/cart/add", json={"offer_id": 1})
     assert r.status_code in (200, 201), f"Ajout au panier échoué : {r.status_code} — {r.text}"
 
+def test_non_auth_user_gestion_offres():
+    r = requests.get(f"{BASE_URL}/gestion/offres")
+    assert r.status_code in (200, 401, 403)
 
 def test_nonauthuser_cannot_checkout(session):
     r = session.post(f"{BASE_URL}/checkout")
