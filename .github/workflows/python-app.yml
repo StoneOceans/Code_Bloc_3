@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test-api:
+  test-fonctionnel:
     runs-on: ubuntu-latest
     services:
       postgres:
