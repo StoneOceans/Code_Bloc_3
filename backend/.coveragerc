@@ -1,18 +1,44 @@
+# ==============================================================================
+# Fichier de configuration pour l'outil de couverture de code "coverage.py"
+# ==============================================================================
+
 [run]
-omit =
-    */migrations/*
-    base/authentication.py
-    base/validators.py
-    base/views.py
-    base/serializer.py
+source = backend
+branch = True
 
 [report]
+show_missing = True
+sort = Name
+
+
+omit =
+    # Fichiers de configuration de Django, peu pertinents à tester
+    backend/settings.py
+    backend/asgi.py
+    backend/wsgi.py
+    */urls.py
+
+    # Ne jamais tester les migrations
+    */migrations/*
+
+    # Fichiers de base de Django souvent non modifiés
+    */apps.py
+    */admin.py
+
+    # On ne mesure pas la couverture des tests eux-mêmes
+    */tests.py
+
+    # Le fichier de gestion principal
+    manage.py
+
 exclude_lines =
     pragma: no cover
-    def __str__
-    if self\.debug
-    raise AssertionError
+
+    # Ne pas se soucier de tester les définitions de méthodes abstraites
     raise NotImplementedError
+
+    # Exclure les blocs de démarrage de script
     if __name__ == .__main__.:
 
-show_missing = true
+    # Exclure les importations utilisées uniquement pour le typage statique
+    if TYPE_CHECKING:
