@@ -50,5 +50,6 @@ jobs:
       - name: Lancer les tests externes (API en ligne)
         run: |
           pytest .github/workflows/test_main.py
+          pytest --ds=base.settings --cov=base --cov-report=term --cov-report=html
 
 
