@@ -1,5 +1,5 @@
 import pytest
 from django.test import TestCase
 
-def testt():
+def test_dummy():
     assert 1 == 1
