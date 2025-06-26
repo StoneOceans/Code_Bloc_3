@@ -1,4 +1,4 @@
-name: Tests API avec Couverture de Code
+name: Tests Fonctionnels avec Couverture de Code
 
 on:
   push:
@@ -40,15 +40,14 @@ jobs:
           # On s'assure que coverage est bien installé
           pip install pytest requests coverage
 
-      - name: Lancer les tests API et calculer la couverture
+      - name: Lancer les tests fonctionnels et calculer la couverture
         env:
-          # Variables d'environnement pour que Django puisse se connecter à la DB
           DJANGO_SETTINGS_MODULE: backend.settings
           POSTGRES_USER: user
           POSTGRES_PASSWORD: password
           POSTGRES_DB: test_db
-          POSTGRES_HOST: localhost # Le service est accessible sur localhost
-          POSTGRES_PORT: 5432      # Le port du service
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432      
         run: |
           # 1. Lancer le serveur Django en arrière-plan avec l'instrumentation de coverage
           # --source=backend -> ne mesure la couverture que sur notre code source
