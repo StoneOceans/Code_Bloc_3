@@ -1,4 +1,4 @@
-name: Tests unitaires Python
+name: Tests API avec Couverture de Code
 
 on:
   push:
@@ -7,9 +7,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test-backend:
+  test-api:
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:13
@@ -38,23 +37,50 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
-          pip install pytest requests pytest-django pytest-cov
+          # On s'assure que coverage est bien installé
+          pip install pytest requests coverage
 
-      - name: Lancer les tests Django internes (models/views)
-        working-directory: backend
+      - name: Lancer les tests API et calculer la couverture
         env:
+          # Variables d'environnement pour que Django puisse se connecter à la DB
           DJANGO_SETTINGS_MODULE: backend.settings
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test_db
+          POSTGRES_HOST: localhost # Le service est accessible sur localhost
+          POSTGRES_PORT: 5432      # Le port du service
         run: |
-          python manage.py test base
+          # 1. Lancer le serveur Django en arrière-plan avec l'instrumentation de coverage
+          # --source=backend -> ne mesure la couverture que sur notre code source
+          # --branch -> active la mesure de couverture des branches (if/else)
+          # L'esperluette '&' en fin de ligne lance la commande en arrière-plan
+          coverage run --source=backend --branch backend/manage.py runserver &
 
-      - name: Lancer les tests Pytest avec coverage (sur le code Django)
-        working-directory: backend
-        env:
-          DJANGO_SETTINGS_MODULE: backend.settings
-        run: |
-          pytest --ds=backend.settings --cov=base --cov-report=term --cov-report=html
+          # Laisser au serveur le temps de démarrer
+          echo "Attente du démarrage du serveur..."
+          sleep 10
 
-      - name: Lancer les tests externes API (test_main.py)
-        run: |
+          # 2. Lancer les tests API externes.
+          # Si un test échoue, le workflow s'arrêtera ici (comportement attendu).
+          echo "Lancement des tests API..."
           pytest .github/workflows/test_main.py
 
+          # 3. Arrêter le serveur Django pour que le fichier .coverage soit sauvegardé
+          # On utilise pkill pour trouver et arrêter le processus du serveur.
+          echo "Arrêt du serveur..."
+          pkill -f "manage.py runserver"
+          sleep 2 # Laisser le temps au processus de se terminer proprement
+
+          # 4. Générer les rapports de couverture à partir du fichier .coverage créé
+          echo "Génération du rapport de couverture :"
+          # Affiche le rapport dans la console avec les lignes manquantes (-m)
+          coverage report -m
+
+          # Crée un rapport HTML détaillé dans un dossier nommé "htmlcov"
+          coverage html -d htmlcov
+
+      - name: Uploader le rapport de couverture HTML
+        uses: actions/upload-artifact@v3
+        with:
+          name: rapport-couverture-html
+          path: htmlcov
