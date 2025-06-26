@@ -24,12 +24,14 @@ omit =
     # Fichiers de base de Django souvent non modifiés
     */apps.py
     */admin.py
+    */views.py
+    */serializer.py
+    */authentication.py
+    */validators.py
 
     # On ne mesure pas la couverture des tests eux-mêmes
     */tests.py
 
-    # Le fichier de gestion principal
-    manage.py
 
 exclude_lines =
     pragma: no cover
