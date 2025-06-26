@@ -80,7 +80,7 @@ jobs:
           coverage html -d htmlcov
 
       - name: Uploader le rapport de couverture HTML
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: rapport-couverture-html
           path: htmlcov
